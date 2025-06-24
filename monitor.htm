@@ -130,7 +130,7 @@
 
         .dashboard {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat-auto-fit, minmax(350px, 1fr));
             gap: 25px;
         }
 
@@ -490,8 +490,8 @@
                 <span class="lang-en">WAESCO Multi-Platform Monitoring System</span>
             </h1>
             <p>
-                <span class="lang-zh">即時監控太陽能系統的交流參數與儲能狀態</span><br>
-                <span class="lang-en">Real-time monitoring of solar system AC parameters and energy storage status</span>
+                <span class="lang-zh">即時監控太陽能系統的儲能狀態</span><br>
+                <span class="lang-en">Real-time monitoring of solar system energy storage status</span>
             </p>
         </header>
 
@@ -555,58 +555,6 @@
         </div>
 
         <div class="dashboard">
-            <!-- AC Parameters Card -->
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">
-                        <span class="lang-zh">交流參數</span><br>
-                        <span class="lang-en">AC Parameters</span>
-                    </h2>
-                    <i class="fas fa-plug card-icon"></i>
-                </div>
-                <div class="chart-container">
-                    <canvas id="acChart"></canvas>
-                </div>
-                <div class="metric-grid">
-                    <div class="metric-card">
-                        <div class="metric-title">
-                            <span class="lang-zh">交流電壓 (ACV)</span><br>
-                            <span class="lang-en">AC Voltage (ACV)</span>
-                        </div>
-                        <div class="metric-value" id="acv-value">
-                            <span class="loading"></span>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-title">
-                            <span class="lang-zh">交流電流 (ACI)</span><br>
-                            <span class="lang-en">AC Current (ACI)</span>
-                        </div>
-                        <div class="metric-value" id="aci-value">
-                            <span class="loading"></span>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-title">
-                            <span class="lang-zh">交流功率 (ACPower)</span><br>
-                            <span class="lang-en">AC Power (ACPower)</span>
-                        </div>
-                        <div class="metric-value" id="acpower-value">
-                            <span class="loading"></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="data-source">
-                    <i class="fas fa-database"></i>
-                    <span class="lang-zh">資料來源: ThingSpeak (即時+趨勢)</span>
-                    <span class="lang-en">Data Source: ThingSpeak (Real-time+Trend)</span>
-                    <span class="source-badge">
-                        <span class="lang-zh">即時+趨勢</span>
-                        <span class="lang-en">Real-time+Trend</span>
-                    </span>
-                </div>
-            </div>
-
             <!-- Voltage Parameters Card -->
             <div class="card">
                 <div class="card-header">
@@ -874,11 +822,9 @@
         const CONFIG = {
             THINGSPEAK_API_URL: 'https://api.thingspeak.com/channels/',
             THINGSPEAK_CHANNEL_IDS: {
-                ac: '1109120',
                 battery: '2974357'
             },
             THINGSPEAK_API_KEYS: {
-                ac: '42UCKHCJD70SQ2MX',
                 battery: 'HVT8I8LCKI45W9H7'
             },
             refreshInterval: 5000
@@ -888,7 +834,7 @@
         const TRANSLATIONS = {
             zh: {
                 title: 'WAESCO多平台監控系統',
-                subtitle: '即時監控太陽能系統的交流參數與儲能狀態',
+                subtitle: '即時監控太陽能系統的儲能狀態',
                 desktop: '電腦版',
                 mobile: '手機版',
                 device_status: '設備狀態',
@@ -897,10 +843,6 @@
                 data_source: '資料來源',
                 data_source_value: 'ThingSpeak',
                 refresh_rate: '更新頻率',
-                ac_parameters: '交流參數',
-                ac_voltage: '交流電壓 (ACV)',
-                ac_current: '交流電流 (ACI)',
-                ac_power: '交流功率 (ACPower)',
                 voltage_parameters: '電壓參數',
                 current_parameters: '電流參數',
                 temperature_parameters: '溫度參數',
@@ -914,7 +856,6 @@
                 thermal_resistance: '熱阻',
                 resistance: '內阻',
                 soc: '電池電量 (SOC)',
-                data_source_ac: '資料來源: ThingSpeak (即時+趨勢)',
                 data_source_battery: '資料來源: ThingSpeak (即時+趨勢)',
                 source_badge: '即時+趨勢',
                 system_alerts: '系統警報',
@@ -934,7 +875,7 @@
             },
             en: {
                 title: 'WAESCO Multi-Platform Monitoring System',
-                subtitle: 'Real-time monitoring of solar system AC parameters and energy storage status',
+                subtitle: 'Real-time monitoring of solar system energy storage status',
                 desktop: 'Desktop',
                 mobile: 'Mobile',
                 device_status: 'Device Status',
@@ -943,10 +884,6 @@
                 data_source: 'Data Source',
                 data_source_value: 'ThingSpeak',
                 refresh_rate: 'Refresh Rate',
-                ac_parameters: 'AC Parameters',
-                ac_voltage: 'AC Voltage (ACV)',
-                ac_current: 'AC Current (ACI)',
-                ac_power: 'AC Power (ACPower)',
                 voltage_parameters: 'Voltage Parameters',
                 current_parameters: 'Current Parameters',
                 temperature_parameters: 'Temperature Parameters',
@@ -960,7 +897,6 @@
                 thermal_resistance: 'Thermal Resistance',
                 resistance: 'Internal Resistance',
                 soc: 'State of Charge (SOC)',
-                data_source_ac: 'Data Source: ThingSpeak (Real-time+Trend)',
                 data_source_battery: 'Data Source: ThingSpeak (Real-time+Trend)',
                 source_badge: 'Real-time+Trend',
                 system_alerts: 'System Alerts',
@@ -984,7 +920,6 @@
         const state = {
             lastUpdate: null,
             data: {
-                ac: { ts: {} },
                 battery: { ts: {} }
             },
             alerts: [],
@@ -995,9 +930,6 @@
         const DOM = {
             lastUpdate: document.getElementById('last-update'),
             refreshValue: document.getElementById('refresh-value'),
-            acvValue: document.getElementById('acv-value'),
-            aciValue: document.getElementById('aci-value'),
-            acpowerValue: document.getElementById('acpower-value'),
             batteryVoltageValue: document.getElementById('battery-voltage-value'),
             supercapVoltageValue: document.getElementById('supercap-voltage-value'),
             batteryCurrentValue: document.getElementById('battery-current-value'),
@@ -1017,120 +949,6 @@
         };
 
         // Initialize charts
-        const acChart = new Chart(
-            document.getElementById('acChart'),
-            {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [
-                        {
-                            label: '交流電壓 (V) | AC Voltage (V)',
-                            data: [],
-                            borderColor: '#9b59b6',
-                            backgroundColor: 'rgba(155, 89, 182, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.3,
-                            yAxisID: 'y1'
-                        },
-                        {
-                            label: '交流電流 (A) | AC Current (A)',
-                            data: [],
-                            borderColor: '#f1c40f',
-                            backgroundColor: 'rgba(241, 196, 15, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.3,
-                            yAxisID: 'y2'
-                        },
-                        {
-                            label: '交流功率 (W) | AC Power (W)',
-                            data: [],
-                            borderColor: '#e67e22',
-                            backgroundColor: 'rgba(230, 126, 34, 0.1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.3,
-                            yAxisID: 'y3'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                usePointStyle: true,
-                                padding: 20
-                            }
-                        }
-                    },
-                    scales: {
-                        y1: {
-                            type: 'linear',
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: 'Voltage (V)'
-                            },
-                            beginAtZero: false,
-                            ticks: {
-                                stepSize: 5
-                            },
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
-                            }
-                        },
-                        y2: {
-                            type: 'linear',
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: 'Current (A)'
-                            },
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            },
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)',
-                                drawOnChartArea: false
-                            }
-                        },
-                        y3: {
-                            type: 'linear',
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: 'Power (W)'
-                            },
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1000
-                            },
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)',
-                                drawOnChartArea: false
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                callback: function(value, index, values) {
-                                    return index % 5 === 0 ? this.getLabelForValue(value) : '';
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        );
-
         const voltageChart = new Chart(
             document.getElementById('voltageChart'),
             {
@@ -1536,14 +1354,6 @@
 
         // Update UI data
         function updateUIData() {
-            // Update AC parameters
-            if (state.data.ac.ts && state.data.ac.ts.feeds && state.data.ac.ts.feeds.length > 0) {
-                const latest = state.data.ac.ts.feeds[state.data.ac.ts.feeds.length - 1];
-                DOM.acvValue.innerHTML = `${parseFloat(latest.field3) || '--'}<span class="metric-unit">V</span>`;
-                DOM.aciValue.innerHTML = `${parseFloat(latest.field4) || '--'}<span class="metric-unit">A</span>`;
-                DOM.acpowerValue.innerHTML = `${parseFloat(latest.field5) || '--'}<span class="metric-unit">W</span>`;
-            }
-
             // Update energy storage parameters
             if (state.data.battery.ts && state.data.battery.ts.feeds && state.data.battery.ts.feeds.length > 0) {
                 const latest = state.data.battery.ts.feeds[state.data.battery.ts.feeds.length - 1];
@@ -1571,20 +1381,6 @@
 
         // Update charts
         function updateCharts() {
-            // Update AC chart
-            if (state.data.ac.ts && state.data.ac.ts.feeds) {
-                const labels = state.data.ac.ts.feeds.map(feed => new Date(feed.created_at).toLocaleTimeString(state.language === 'en' ? 'en-US' : 'zh-TW', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                }));
-                acChart.data.labels = labels;
-                acChart.data.datasets[0].data = state.data.ac.ts.feeds.map(feed => parseFloat(feed.field3) || null);
-                acChart.data.datasets[1].data = state.data.ac.ts.feeds.map(feed => parseFloat(feed.field4) || null);
-                acChart.data.datasets[2].data = state.data.ac.ts.feeds.map(feed => parseFloat(feed.field5) || null);
-                acChart.update();
-            }
-
             // Update battery charts
             if (state.data.battery.ts && state.data.battery.ts.feeds) {
                 const labels = state.data.battery.ts.feeds.map(feed => new Date(feed.created_at).toLocaleTimeString(state.language === 'en' ? 'en-US' : 'zh-TW', {
@@ -1623,13 +1419,9 @@
             addAlert('alert_fetching', 'info');
 
             try {
-                const [tsACData, tsBatteryData] = await Promise.all([
-                    fetchDataFromThingSpeak(CONFIG.THINGSPEAK_CHANNEL_IDS.ac, CONFIG.THINGSPEAK_API_KEYS.ac),
-                    fetchDataFromThingSpeak(CONFIG.THINGSPEAK_CHANNEL_IDS.battery, CONFIG.THINGSPEAK_API_KEYS.battery)
-                ]);
+                const tsBatteryData = await fetchDataFromThingSpeak(CONFIG.THINGSPEAK_CHANNEL_IDS.battery, CONFIG.THINGSPEAK_API_KEYS.battery);
 
                 state.data = {
-                    ac: { ts: tsACData || {} },
                     battery: { ts: tsBatteryData || {} }
                 };
 
