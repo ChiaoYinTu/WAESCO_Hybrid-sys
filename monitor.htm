@@ -1348,7 +1348,7 @@
         // Calculate SOC
         function calculateSOC(batteryVoltage) {
             if (!batteryVoltage || isNaN(batteryVoltage)) return null;
-            const soc = ((batteryVoltage - 23) / 6 * 100);
+            const soc = ((batteryVoltage - 22) / 4 * 100);
             return Math.max(0, Math.min(100, soc.toFixed(1))); // Clamp between 0 and 100
         }
 
