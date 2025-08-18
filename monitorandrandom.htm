@@ -1,0 +1,1956 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WAESCO多平台監控系统<br>WAESCO Multi-Platform Monitoring System</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2ecc71;
+            --danger: #e67e22;
+            --warning: #f39c12;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --gray: #95a5a6;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --shadow-bg: 0 4px 20px rgba(0, 0, 0, 0.1);
+            --mobile-breakpoint: 768px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Noto Sans TC', 'Roboto', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #e6f3ff, #b3d9ff, #e6f3ff);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        header p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+
+        .demo-badge { background: linear-gradient(45deg, #ff6b6b, #ff8e53); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: .9rem; font-weight: 600; margin-top: 10px; display: inline-block; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05);} 100% { transform: scale(1);} }
+
+        .platform-toggle {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .platform-btn, .platform-select {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: #2c3e50;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .platform-select {
+            appearance: none;
+        }
+
+        .platform-btn.active {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(52, 152, 219, 0.5);
+        }
+
+        .platform-btn i {
+            margin-right: 8px;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 15px 25px;
+            margin-bottom: 30px;
+            color: #2c3e50;
+            box-shadow: var(--shadow-bg);
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            text-align: center;
+            min-width: 100px;
+            margin: 5px;
+        }
+
+        .status-value {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: var(--shadow-bg);
+            backdrop-filter: blur(5px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .card-icon {
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+
+        .chart-container {
+            height: 200px;
+            position: relative;
+            flex-grow: 1;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .metric-card {
+            background: rgba(236, 240, 241, 0.7);
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-title {
+            font-size: 0.95rem;
+            color: var(--gray);
+            margin-bottom: 5px;
+        }
+
+        .metric-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+
+        .metric-unit {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-left: 3px;
+        }
+
+        .soc-progress {
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 15px;
+            position: relative;
+        }
+
+        .soc-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--danger), var(--warning), var(--secondary));
+            border-radius: 12px;
+            transition: width 0.5s ease;
+        }
+
+        .soc-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            color: var(--dark);
+            text-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
+        }
+
+        .data-source {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .data-source i {
+            margin-right: 8px;
+            color: var(--primary);
+        }
+
+        .data-source .source-badge {
+            background: var(--secondary);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-left: 10px;
+            font-size: 0.8rem;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: rgba(236, 240, 241, 0.7);
+            transition: all 0.3s ease;
+        }
+
+        .alert-item:hover {
+            background: rgba(236, 240, 241, 0.9);
+        }
+
+        .alert-item i {
+            font-size: 1.2rem;
+            margin-right: 10px;
+            min-width: 24px;
+        }
+
+        .alert-item .text {
+            flex-grow: 1;
+        }
+
+        .alert-item .alert-time {
+            font-size: 0.8rem;
+            color: var(--gray);
+            min-width: 70px;
+            text-align: right;
+        }
+
+        .text-success {
+            color: var(--secondary);
+        }
+
+        .text-warning {
+            color: var(--warning);
+        }
+
+        .text-danger {
+            color: var(--danger);
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .control-group select, .control-group input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background: white;
+            font-size: 1rem;
+        }
+
+        .control-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-btn i {
+            margin-right: 8px;
+        }
+
+        .control-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .warning {
+            color: var(--danger);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: rgba(44, 62, 80, 0.8);
+            font-size: 0.9rem;
+        }
+
+        .bilingual .lang-zh, .bilingual .lang-en {
+            display: inline;
+        }
+
+        .lang-zh {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+
+        .lang-en {
+            font-family: 'Roboto', sans-serif;
+            margin-left: 5px;
+            color: #555;
+        }
+
+        .lang-en-only .lang-zh, .lang-zh-only .lang-en {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .status-bar {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .status-item {
+                width: 100%;
+            }
+
+            header h1 {
+                font-size: 2.2rem;
+            }
+
+            .chart-container {
+                height: 180px;
+            }
+
+            .metric-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .platform-toggle {
+                flex-direction: column;
+            }
+
+            .platform-btn, .platform-select {
+                width: 100%;
+                margin: 5px 0;
+            }
+
+            .desktop-optimized {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .desktop-optimized {
+                grid-template-columns: 2fr 1fr;
+            }
+
+            .desktop-optimized .card {
+                min-height: 400px;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .connection-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .connected {
+            background-color: var(--secondary);
+            box-shadow: 0 0 8px var(--secondary);
+        }
+
+        .disconnected {
+            background-color: var(--danger);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <i class="fas fa-microchip"></i>
+                <span class="lang-zh">WAESCO多平台監控系統</span><br>
+                <span class="lang-en">WAESCO Multi-Platform Monitoring System</span>
+            </h1>
+            <div class="demo-badge" id="demo-badge" style="display: none;">
+                <i class="fas fa-eye"></i>
+                <span class="lang-zh">展示版本 - 模擬數據</span>
+                <span class="lang-en">Demo Version - Simulated Data</span>
+            </div>
+            <p>
+                <span class="lang-zh">即時監控太陽能系統的交流參數與儲能狀態</span><br>
+                <span class="lang-en">Real-time monitoring of solar system AC parameters and energy storage status</span>
+            </p>
+        </header>
+
+        <div class="platform-toggle">
+            <button class="platform-btn active" id="desktop-btn">
+                <i class="fas fa-desktop"></i>
+                <span class="lang-zh">電腦版</span>
+                <span class="lang-en">Desktop</span>
+            </button>
+            <button class="platform-btn" id="mobile-btn">
+                <i class="fas fa-mobile-alt"></i>
+                <span class="lang-zh">手機版</span>
+                <span class="lang-en">Mobile</span>
+            </button>
+            <select id="language-toggle" class="platform-select">
+                <option value="zh">繁體中文</option>
+                <option value="en">English</option>
+                <option value="bilingual" selected>雙語 Bilingual</option>
+            </select>
+            <select id="mode-toggle" class="platform-select">
+                <option value="demo" selected>
+                    <span class="lang-zh">展示模式</span>
+                    <span class="lang-en">Demo Mode</span>
+                </option>
+                <option value="thingspeak">
+                    <span class="lang-zh">實際模式</span>
+                    <span class="lang-en">ThingSpeak Mode</span>
+                </option>
+            </select>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <div>
+                    <span class="lang-zh">設備狀態</span>
+                    <span class="lang-en">Device Status</span>
+                </div>
+                <div class="status-value">
+                    <span class="connection-dot connected"></span>
+                    <span class="lang-zh">執行中</span>
+                    <span class="lang-en">Running</span>
+                </div>
+            </div>
+            <div class="status-item">
+                <div>
+                    <span class="lang-zh">最後更新時間</span>
+                    <span class="lang-en">Last Update</span>
+                </div>
+                <div class="status-value" id="last-update">--:--:--</div>
+            </div>
+            <div class="status-item">
+                <div>
+                    <span class="lang-zh">資料來源</span>
+                    <span class="lang-en">Data Source</span>
+                </div>
+                <div class="status-value" id="data-source-value">
+                    <i class="fas fa-cogs" id="source-icon"></i>
+                    <span id="source-text"></span>
+                </div>
+            </div>
+            <div class="status-item">
+                <div>
+                    <span class="lang-zh">更新頻率</span>
+                    <span class="lang-en">Refresh Rate</span>
+                </div>
+                <div class="status-value" id="refresh-value">
+                    <span class="lang-en">5s</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <!-- AC Parameters Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span class="lang-zh">交流參數</span><br>
+                        <span class="lang-en">AC Parameters</span>
+                    </h2>
+                    <i class="fas fa-plug card-icon"></i>
+                </div>
+                <div class="chart-container">
+                    <canvas id="acChart"></canvas>
+                </div>
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-title">
+                            <span class="lang-zh">交流電壓 (ACV)</span><br>
+                            <span class="lang-en">AC Voltage (ACV)</span>
+                        </div>
+                        <div class="metric-value" id="acv-value">
+                            <span class="loading"></span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">
+                            <span class="lang-zh">交流電流 (ACI)</span><br>
+                            <span class="lang-en">AC Current (ACI)</span>
+                        </div>
+                        <div class="metric-value" id="aci-value">
+                            <span class="loading"></span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">
+                            <span class="lang-zh">交流功率 (ACPower)</span><br>
+                            <span class="lang-en">AC Power (ACPower)</span>
+                        </div>
+                        <div class="metric-value" id="acpower-value">
+                            <span class="loading"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="data-source">
+                    <i class="fas fa-database"></i>
+                    <span id="ac-data-source-text"></span>
+                    <span class="source-badge">
+                        <span class="lang-zh">即時+趨勢</span>
+                        <span class="lang-en">Real-time+Trend</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Voltage Parameters Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span class="lang-zh">電壓參數</span>
+                        <span class="lang-en">Voltage Parameters</span>
+                    </h2>
+                    <i class="fas fa-bolt card-icon"></i>
+                </div>
+                <div class="chart-container">
+                    <canvas id="voltageChart"></canvas>
+                </div>
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-title">
+                            <span class="lang-zh">電池電壓</span><br>
+                            <span class="lang-en">Battery Voltage</span>
+                        </div>
+                        <div class="metric-value" id="battery-voltage-value">
+                            <span class="loading"></span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">
+                            <span class="lang-zh">超級電容電壓</span><br>
+                            <span class="lang-en">Supercapacitor Voltage</span>
+                        </div>
+                        <div class="metric-value" id="supercap-voltage-value">
+                            <span class="loading"></span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">
+                            <span class="lang-zh">電池電量 (SOC)</span><br>
+                            <span class="lang-en">State of Charge (SOC)</span>
+                        </div>
+                        <div class="metric-value" id="soc-value">
+                            <span class="loading"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="soc-progress">
+                    <div class="soc-fill" id="soc-progress-bar" style="width: 0%"></div>
+                    <div class="soc-text" id="soc-progress-text">0%</div>
+                </div>
+                <div class="data-source">
+                    <i class="fas fa-database"></i>
+                    <span id="voltage-data-source-text"></span>
+                    <span class="source-badge">
+                        <span class="lang-zh">即時+趨勢</span>
+                        <span class="lang-en">Real-time+Trend</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Current Parameters Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span class="lang-zh">電流參數</span>
+                        <span class="lang-en">Current Parameters</span>
+                    </h2>
+                    <i class="fas fa-battery-half card-icon"></i>
+                </div>
+                <div class="chart-container">
+                    <canvas id="currentChart"></canvas>
+                </div>
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-title">
+                            <span class="lang-zh">電池電流</span><br>
+                            <span class="lang-en">Battery Current</span>
+                        </div>
+                        <div class="metric-value" id="battery-current-value">
+                            <span class="loading"></span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">
+                            <span class="lang-zh">超級電容電流</span><br>
+                            <span class="lang-en">Supercapacitor Current</span>
+                        </div>
+                        <div class="metric-value" id="supercap-current-value">
+                            <span class="loading"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="data-source">
+                    <i class="fas fa-database"></i>
+                    <span id="current-data-source-text"></span>
+                    <span class="source-badge">
+                        <span class="lang-zh">即時+趨勢</span>
+                        <span class="lang-en">Real-time+Trend</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Temperature Parameters Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span class="lang-zh">溫度參數</span>
+                        <span class="lang-en">Temperature Parameters</span>
+                    </h2>
+                    <i class="fas fa-thermometer-half card-icon"></i>
+                </div>
+                <div class="chart-container">
+                    <canvas id="temperatureChart"></canvas>
+                </div>
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-title">
+                            <span class="lang-zh">電池溫度</span><br>
+                            <span class="lang-en">Battery Temperature</span>
+                        </div>
+                        <div class="metric-value" id="battery-temp-value">
+                            <span class="loading"></span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">
+                            <span class="lang-zh">轉換器溫度</span><br>
+                            <span class="lang-en">Converter Temperature</span>
+                        </div>
+                        <div class="metric-value" id="converter-temp-value">
+                            <span class="loading"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="data-source">
+                    <i class="fas fa-database"></i>
+                    <span id="temperature-data-source-text"></span>
+                    <span class="source-badge">
+                        <span class="lang-zh">即時+趨勢</span>
+                        <span class="lang-en">Real-time+Trend</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Resistance Parameters Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span class="lang-zh">電阻參數</span>
+                        <span class="lang-en">Resistance Parameters</span>
+                    </h2>
+                    <i class="fas fa-omega card-icon"></i>
+                </div>
+                <div class="chart-container">
+                    <canvas id="resistanceChart"></canvas>
+                </div>
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-title">
+                            <span class="lang-zh">熱阻</span><br>
+                            <span class="lang-en">Thermal Resistance</span>
+                        </div>
+                        <div class="metric-value" id="thermal-resistance-value">
+                            <span class="loading"></span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">
+                            <span class="lang-zh">內阻</span><br>
+                            <span class="lang-en">Internal Resistance</span>
+                        </div>
+                        <div class="metric-value" id="resistance-value">
+                            <span class="loading"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="data-source">
+                    <i class="fas fa-database"></i>
+                    <span id="resistance-data-source-text"></span>
+                    <span class="source-badge">
+                        <span class="lang-zh">即時+趨勢</span>
+                        <span class="lang-en">Real-time+Trend</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts and Control Panel -->
+        <div class="dashboard desktop-optimized">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span class="lang-zh">系統警報</span>
+                        <span class="lang-en">System Alerts</span>
+                    </h2>
+                    <i class="fas fa-bell card-icon"></i>
+                </div>
+                <div class="alert-list" id="alert-list">
+                    <div class="alert-item">
+                        <i class="fas fa-info-circle text-primary"></i>
+                        <div class="text">
+                            <span class="lang-zh">系統啟動，正在連接資料來源...</span>
+                            <span class="lang-en">System starting, connecting to data source...</span>
+                        </div>
+                        <div class="alert-time">剛剛</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <span class="lang-zh">資料控制面板</span>
+                        <span class="lang-en">Data Control Panel</span>
+                    </h2>
+                    <i class="fas fa-sliders-h card-icon"></i>
+                </div>
+                <div class="control-panel">
+                    <div class="control-group">
+                        <label>
+                            <span class="lang-zh">更新頻率</span>
+                            <span class="lang-en">Refresh Rate</span>
+                        </label>
+                        <select id="refresh-rate">
+                            <option value="2000">
+                                <span class="lang-en">2 secs</span>
+                            </option>
+                            <option value="5000" selected>
+                                <span class="lang-en">5 secs</span>
+                            </option>
+                            <option value="10000">
+                                <span class="lang-en">10 secs</span>
+                            </option>
+                            <option value="30000">
+                                <span class="lang-en">30 secs</span>
+                            </option>
+                        </select>
+                    </div>
+                    <button class="control-btn" id="refresh-btn">
+                        <i class="fas fa-sync-alt"></i>
+                        <span class="lang-zh">立即更新數據</span>
+                        <span class="lang-en">Refresh Data Now</span>
+                    </button>
+                    <button class="control-btn" id="export-btn">
+                        <i class="fas fa-download"></i>
+                        <span class="lang-zh">匯出數據報表</span>
+                        <span class="lang-en">Export Data Report</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>
+                <span class="lang-zh">WAESCO多平台監控系統 | 最後更新: </span>
+                <span class="lang-en">WAESCO Multi-Platform Monitoring System | Last Update: </span>
+                <span id="current-date"></span>
+                <span id="footer-source"></span>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            THINGSPEAK_API_URL: 'https://api.thingspeak.com/channels/',
+            THINGSPEAK_CHANNEL_IDS: {
+                ac: '1109120',
+                battery: '2974357'
+            },
+            THINGSPEAK_API_KEYS: {
+                ac: '42UCKHCJD70SQ2MX',
+                battery: 'HVT8I8LCKI45W9H7'
+            },
+            refreshInterval: 5000
+        };
+
+        // Translation dictionary
+        const TRANSLATIONS = {
+            zh: {
+                title: 'WAESCO多平台監控系統',
+                subtitle: '即時監控太陽能系統的交流參數與儲能狀態',
+                desktop: '電腦版',
+                mobile: '手機版',
+                device_status: '設備狀態',
+                running: '執行中',
+                last_update: '最後更新時間',
+                data_source: '資料來源',
+                data_source_demo: '模擬器',
+                data_source_thingspeak: 'ThingSpeak',
+                refresh_rate: '更新頻率',
+                ac_parameters: '交流參數',
+                ac_voltage: '交流電壓 (ACV)',
+                ac_current: '交流電流 (ACI)',
+                ac_power: '交流功率 (ACPower)',
+                voltage_parameters: '電壓參數',
+                current_parameters: '電流參數',
+                temperature_parameters: '溫度參數',
+                resistance_parameters: '電阻參數',
+                battery_voltage: '電池電壓',
+                supercap_voltage: '超級電容電壓',
+                battery_current: '電池電流',
+                supercap_current: '超級電容電流',
+                battery_temp: '電池溫度',
+                converter_temp: '轉換器溫度',
+                thermal_resistance: '熱阻',
+                resistance: '內阻',
+                soc: '電池電量 (SOC)',
+                data_source_ac: '資料來源: ',
+                source_badge: '即時+趨勢',
+                system_alerts: '系統警報',
+                data_control_panel: '資料控制面板',
+                refresh_rate_label: '更新頻率',
+                refresh_button: '立即更新數據',
+                export_button: '匯出數據報表',
+                alert_start: '系統啟動，正在連接資料來源...',
+                alert_fetching: '正在從資料來源取得最新資料...',
+                alert_success: '數據更新成功',
+                alert_ts_error: 'ThingSpeak資料擷取失敗: ',
+                alert_low_battery_voltage: '電池電壓過低: ',
+                alert_high_battery_voltage: '電池電壓過高: ',
+                alert_high_battery_temp: '電池溫度過高: ',
+                alert_high_converter_temp: '轉換器溫度過高: ',
+                alert_low_soc: '電池電量過低: ',
+                alert_mode_changed: '模式切換至: '
+            },
+            en: {
+                title: 'WAESCO Multi-Platform Monitoring System',
+                subtitle: 'Real-time monitoring of solar system AC parameters and energy storage status',
+                desktop: 'Desktop',
+                mobile: 'Mobile',
+                device_status: 'Device Status',
+                running: 'Running',
+                last_update: 'Last Update',
+                data_source: 'Data Source',
+                data_source_demo: 'Simulator',
+                data_source_thingspeak: 'ThingSpeak',
+                refresh_rate: 'Refresh Rate',
+                ac_parameters: 'AC Parameters',
+                ac_voltage: 'AC Voltage (ACV)',
+                ac_current: 'AC Current (ACI)',
+                ac_power: 'AC Power (ACPower)',
+                voltage_parameters: 'Voltage Parameters',
+                current_parameters: 'Current Parameters',
+                temperature_parameters: 'Temperature Parameters',
+                resistance_parameters: 'Resistance Parameters',
+                battery_voltage: 'Battery Voltage',
+                supercap_voltage: 'Supercapacitor Voltage',
+                battery_current: 'Battery Current',
+                supercap_current: 'Supercapacitor Current',
+                battery_temp: 'Battery Temperature',
+                converter_temp: 'Converter Temperature',
+                thermal_resistance: 'Thermal Resistance',
+                resistance: 'Internal Resistance',
+                soc: 'State of Charge (SOC)',
+                data_source_ac: 'Data Source: ',
+                source_badge: 'Real-time+Trend',
+                system_alerts: 'System Alerts',
+                data_control_panel: 'Data Control Panel',
+                refresh_rate_label: 'Refresh Rate',
+                refresh_button: 'Refresh Data Now',
+                export_button: 'Export Data Report',
+                alert_start: 'System starting, connecting to data source...',
+                alert_fetching: 'Fetching latest data from source...',
+                alert_success: 'Data updated successfully',
+                alert_ts_error: 'ThingSpeak data fetch failed: ',
+                alert_low_battery_voltage: 'Battery Voltage too low: ',
+                alert_high_battery_voltage: 'Battery Voltage too high: ',
+                alert_high_battery_temp: 'Battery Temperature too high: ',
+                alert_high_converter_temp: 'Converter Temperature too high: ',
+                alert_low_soc: 'Battery SOC too low: ',
+                alert_mode_changed: 'Mode changed to: '
+            }
+        };
+
+        // State management
+        const state = {
+            lastUpdate: null,
+            data: {
+                ac: { feeds: [] },
+                battery: { feeds: [] }
+            },
+            alerts: [],
+            language: 'bilingual',
+            mode: 'demo'
+        };
+
+        // DOM elements
+        const DOM = {
+            demoBadge: document.getElementById('demo-badge'),
+            lastUpdate: document.getElementById('last-update'),
+            refreshValue: document.getElementById('refresh-value'),
+            sourceIcon: document.getElementById('source-icon'),
+            sourceText: document.getElementById('source-text'),
+            acvValue: document.getElementById('acv-value'),
+            aciValue: document.getElementById('aci-value'),
+            acpowerValue: document.getElementById('acpower-value'),
+            batteryVoltageValue: document.getElementById('battery-voltage-value'),
+            supercapVoltageValue: document.getElementById('supercap-voltage-value'),
+            batteryCurrentValue: document.getElementById('battery-current-value'),
+            supercapCurrentValue: document.getElementById('supercap-current-value'),
+            batteryTempValue: document.getElementById('battery-temp-value'),
+            converterTempValue: document.getElementById('converter-temp-value'),
+            thermalResistanceValue: document.getElementById('thermal-resistance-value'),
+            resistanceValue: document.getElementById('resistance-value'),
+            socValue: document.getElementById('soc-value'),
+            socProgressBar: document.getElementById('soc-progress-bar'),
+            socProgressText: document.getElementById('soc-progress-text'),
+            alertList: document.getElementById('alert-list'),
+            refreshRate: document.getElementById('refresh-rate'),
+            refreshBtn: document.getElementById('refresh-btn'),
+            exportBtn: document.getElementById('export-btn'),
+            languageToggle: document.getElementById('language-toggle'),
+            modeToggle: document.getElementById('mode-toggle'),
+            currentDate: document.getElementById('current-date'),
+            footerSource: document.getElementById('footer-source'),
+            acDataSourceText: document.getElementById('ac-data-source-text'),
+            voltageDataSourceText: document.getElementById('voltage-data-source-text'),
+            currentDataSourceText: document.getElementById('current-data-source-text'),
+            temperatureDataSourceText: document.getElementById('temperature-data-source-text'),
+            resistanceDataSourceText: document.getElementById('resistance-data-source-text')
+        };
+
+        // Initialize charts
+        const acChart = new Chart(
+            document.getElementById('acChart'),
+            {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: '交流電壓 (V) | AC Voltage (V)',
+                            data: [],
+                            borderColor: '#9b59b6',
+                            backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3,
+                            yAxisID: 'y1'
+                        },
+                        {
+                            label: '交流電流 (A) | AC Current (A)',
+                            data: [],
+                            borderColor: '#f1c40f',
+                            backgroundColor: 'rgba(241, 196, 15, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3,
+                            yAxisID: 'y2'
+                        },
+                        {
+                            label: '交流功率 (W) | AC Power (W)',
+                            data: [],
+                            borderColor: '#e67e22',
+                            backgroundColor: 'rgba(230, 126, 34, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3,
+                            yAxisID: 'y3'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    },
+                    scales: {
+                        y1: {
+                            type: 'linear',
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Voltage (V)'
+                            },
+                            beginAtZero: false,
+                            ticks: {
+                                stepSize: 5
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        y2: {
+                            type: 'linear',
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Current (A)'
+                            },
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                drawOnChartArea: false
+                            }
+                        },
+                        y3: {
+                            type: 'linear',
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Power (W)'
+                            },
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1000
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                drawOnChartArea: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return index % 5 === 0 ? this.getLabelForValue(value) : '';
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        );
+
+        const voltageChart = new Chart(
+            document.getElementById('voltageChart'),
+            {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: '電池電壓 (V) | Battery Voltage (V)',
+                            data: [],
+                            borderColor: '#e67e22',
+                            backgroundColor: 'rgba(230, 126, 34, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: '超級電容電壓 (V) | Supercapacitor Voltage (V)',
+                            data: [],
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Voltage (V)'
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return index % 5 === 0 ? this.getLabelForValue(value) : '';
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        );
+
+        const currentChart = new Chart(
+            document.getElementById('currentChart'),
+            {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: '電池電流 (A) | Battery Current (A)',
+                            data: [],
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: '超級電容電流 (A) | Supercapacitor Current (A)',
+                            data: [],
+                            borderColor: '#f1c40f',
+                            backgroundColor: 'rgba(241, 196, 15, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Current (A)'
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return index % 5 === 0 ? this.getLabelForValue(value) : '';
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        );
+
+        const temperatureChart = new Chart(
+            document.getElementById('temperatureChart'),
+            {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: '電池溫度 (°C) | Battery Temperature (°C)',
+                            data: [],
+                            borderColor: '#9b59b6',
+                            backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: '轉換器溫度 (°C) | Converter Temperature (°C)',
+                            data: [],
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Temperature (°C)'
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return index % 5 === 0 ? this.getLabelForValue(value) : '';
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        );
+
+        const resistanceChart = new Chart(
+            document.getElementById('resistanceChart'),
+            {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: '熱阻 (°C/W) | Thermal Resistance (°C/W)',
+                            data: [],
+                            borderColor: '#1abc9c',
+                            backgroundColor: 'rgba(26, 188, 156, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3,
+                            yAxisID: 'y1'
+                        },
+                        {
+                            label: '內阻 (mΩ) | Internal Resistance (mΩ)',
+                            data: [],
+                            borderColor: '#34495e',
+                            backgroundColor: 'rgba(52, 73, 94, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3,
+                            yAxisID: 'y2'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    },
+                    scales: {
+                        y1: {
+                            type: 'linear',
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Thermal Resistance (°C/W)'
+                            },
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        y2: {
+                            type: 'linear',
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Internal Resistance (mΩ)'
+                            },
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                drawOnChartArea: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return index % 5 === 0 ? this.getLabelForValue(value) : '';
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        );
+
+        // Charts array for easy clearing
+        const charts = [acChart, voltageChart, currentChart, temperatureChart, resistanceChart];
+
+        // Platform toggle functionality
+        document.getElementById('desktop-btn').addEventListener('click', function() {
+            document.body.classList.remove('mobile-view');
+            document.body.classList.add('desktop-view');
+            this.classList.add('active');
+            document.getElementById('mobile-btn').classList.remove('active');
+        });
+
+        document.getElementById('mobile-btn').addEventListener('click', function() {
+            document.body.classList.remove('desktop-view');
+            document.body.classList.add('mobile-view');
+            this.classList.add('active');
+            document.getElementById('desktop-btn').classList.remove('active');
+        });
+
+        // Language toggle functionality
+        DOM.languageToggle.addEventListener('change', function() {
+            state.language = this.value;
+            updateLanguage();
+        });
+
+        function updateLanguage() {
+            document.body.classList.remove('lang-zh-only', 'lang-en-only', 'bilingual');
+            if (state.language === 'zh') {
+                document.body.classList.add('lang-zh-only');
+            } else if (state.language === 'en') {
+                document.body.classList.add('lang-en-only');
+            } else {
+                document.body.classList.add('bilingual');
+            }
+        }
+
+        // Mode toggle functionality
+        DOM.modeToggle.addEventListener('change', function() {
+            state.mode = this.value;
+            clearData();
+            updateModeUI();
+            addAlert('alert_mode_changed', 'info', state.mode === 'demo' ? '展示模式 | Demo Mode' : '實際模式 | ThingSpeak Mode');
+            startTimer();
+            if (state.mode === 'thingspeak') {
+                fetchAllData();
+            } else {
+                updateDemo();
+            }
+        });
+
+        // Detect device type and set initial view
+        if (window.innerWidth <= 768) {
+            document.body.classList.add('mobile-view');
+            document.getElementById('mobile-btn').classList.add('active');
+            document.getElementById('desktop-btn').classList.remove('active');
+        } else {
+            document.body.classList.add('desktop-view');
+            document.getElementById('desktop-btn').classList.add('active');
+            document.getElementById('mobile-btn').classList.remove('active');
+        }
+
+        // Initialize language
+        updateLanguage();
+
+        // Update mode UI
+        function updateModeUI() {
+            if (state.mode === 'demo') {
+                DOM.demoBadge.style.display = 'inline-block';
+                DOM.sourceIcon.classList.remove('fa-cloud');
+                DOM.sourceIcon.classList.add('fa-cogs');
+                DOM.sourceText.innerHTML = '<span class="lang-zh">' + TRANSLATIONS.zh.data_source_demo + '</span><span class="lang-en">' + TRANSLATIONS.en.data_source_demo + '</span>';
+                DOM.footerSource.innerHTML = '<span class="lang-zh"> | 資料來源: 模擬器</span><span class="lang-en"> | Data Source: Simulator</span>';
+                const sourceText = '<span class="lang-zh">資料來源: 模擬器 (即時+趨勢)</span><span class="lang-en">Data Source: Simulator (Real-time+Trend)</span>';
+                DOM.acDataSourceText.innerHTML = sourceText;
+                DOM.voltageDataSourceText.innerHTML = sourceText;
+                DOM.currentDataSourceText.innerHTML = sourceText;
+                DOM.temperatureDataSourceText.innerHTML = sourceText;
+                DOM.resistanceDataSourceText.innerHTML = sourceText;
+            } else {
+                DOM.demoBadge.style.display = 'none';
+                DOM.sourceIcon.classList.remove('fa-cogs');
+                DOM.sourceIcon.classList.add('fa-cloud');
+                DOM.sourceText.innerHTML = '<span class="lang-zh">' + TRANSLATIONS.zh.data_source_thingspeak + '</span><span class="lang-en">' + TRANSLATIONS.en.data_source_thingspeak + '</span>';
+                DOM.footerSource.innerHTML = '<span class="lang-zh"> | 資料來源: ThingSpeak</span><span class="lang-en"> | Data Source: ThingSpeak</span>';
+                const sourceText = '<span class="lang-zh">資料來源: ThingSpeak (即時+趨勢)</span><span class="lang-en">Data Source: ThingSpeak (Real-time+Trend)</span>';
+                DOM.acDataSourceText.innerHTML = sourceText;
+                DOM.voltageDataSourceText.innerHTML = sourceText;
+                DOM.currentDataSourceText.innerHTML = sourceText;
+                DOM.temperatureDataSourceText.innerHTML = sourceText;
+                DOM.resistanceDataSourceText.innerHTML = sourceText;
+            }
+        }
+
+        // Update date and time
+        function updateDateTime() {
+            const now = new Date();
+            const dateStr = now.toLocaleString(state.language === 'en' ? 'en-US' : 'zh-TW', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            DOM.lastUpdate.textContent = dateStr;
+            DOM.currentDate.textContent = dateStr;
+        }
+
+        // Add alert
+        function addAlert(messageKey, type = 'info', value = '') {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString(state.language === 'en' ? 'en-US' : 'zh-TW', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            const alertItem = document.createElement('div');
+            alertItem.className = 'alert-item';
+
+            let iconClass = 'fas fa-info-circle text-primary';
+            if (type === 'warning') iconClass = 'fas fa-exclamation-triangle text-warning';
+            if (type === 'danger') iconClass = 'fas fa-exclamation-circle text-danger';
+            if (type === 'success') iconClass = 'fas fa-check-circle text-success';
+
+            const messageZh = TRANSLATIONS.zh[messageKey] + value;
+            const messageEn = TRANSLATIONS.en[messageKey] + value;
+
+            alertItem.innerHTML = `
+                <i class="${iconClass}"></i>
+                <div class="text">
+                    <span class="lang-zh">${messageZh}</span>
+                    <span class="lang-en">${messageEn}</span>
+                </div>
+                <div class="alert-time">${timeStr}</div>
+            `;
+
+            DOM.alertList.insertBefore(alertItem, DOM.alertList.firstChild);
+
+            if (DOM.alertList.children.length > 10) {
+                DOM.alertList.removeChild(DOM.alertList.lastChild);
+            }
+
+            state.alerts.unshift({ message: { zh: messageZh, en: messageEn }, type, timestamp: now });
+        }
+
+        // Clear data
+        function clearData() {
+            // Clear metrics
+            const metrics = [DOM.acvValue, DOM.aciValue, DOM.acpowerValue, DOM.batteryVoltageValue, DOM.supercapVoltageValue,
+                             DOM.batteryCurrentValue, DOM.supercapCurrentValue, DOM.batteryTempValue, DOM.converterTempValue,
+                             DOM.thermalResistanceValue, DOM.resistanceValue, DOM.socValue];
+            metrics.forEach(m => m.innerHTML = `--<span class="metric-unit"></span>`);
+
+            // Clear SOC progress
+            DOM.socProgressBar.style.width = '0%';
+            DOM.socProgressText.textContent = '0%';
+
+            // Clear charts
+            charts.forEach(chart => {
+                chart.data.labels = [];
+                chart.data.datasets.forEach(ds => ds.data = []);
+                chart.update();
+            });
+
+            // Clear alerts
+            DOM.alertList.innerHTML = '';
+            state.alerts = [];
+
+            // Clear state data
+            state.data = {
+                ac: { feeds: [] },
+                battery: { feeds: [] }
+            };
+        }
+
+        // Fetch data from ThingSpeak
+        async function fetchDataFromThingSpeak(channel, apiKey) {
+            try {
+                const response = await fetch(`${CONFIG.THINGSPEAK_API_URL}${channel}/feeds.json?api_key=${apiKey}&results=150`);
+                if (!response.ok) {
+                    throw new Error('Network error');
+                }
+                const data = await response.json();
+                return data.feeds || [];
+            } catch (error) {
+                console.error('ThingSpeak data fetch error:', error);
+                addAlert('alert_ts_error', 'danger', error.message);
+                return [];
+            }
+        }
+
+        // Calculate SOC
+        function calculateSOC(batteryVoltage) {
+            if (!batteryVoltage || isNaN(batteryVoltage)) return null;
+            const soc = ((batteryVoltage - 23) / 6 * 100);
+            return Math.max(0, Math.min(100, soc.toFixed(1))); // Clamp between 0 and 100
+        }
+
+        // Update UI data for ThingSpeak
+        function updateUIDataTS() {
+            // Update AC parameters
+            if (state.data.ac.feeds.length > 0) {
+                const latest = state.data.ac.feeds[state.data.ac.feeds.length - 1];
+                DOM.acvValue.innerHTML = `${parseFloat(latest.field3) || '--'}<span class="metric-unit">V</span>`;
+                DOM.aciValue.innerHTML = `${parseFloat(latest.field4) || '--'}<span class="metric-unit">A</span>`;
+                DOM.acpowerValue.innerHTML = `${parseFloat(latest.field5) || '--'}<span class="metric-unit">W</span>`;
+            }
+
+            // Update energy storage parameters
+            if (state.data.battery.feeds.length > 0) {
+                const latest = state.data.battery.feeds[state.data.battery.feeds.length - 1];
+                const batteryVoltage = parseFloat(latest.field1);
+                DOM.batteryVoltageValue.innerHTML = `${batteryVoltage || '--'}<span class="metric-unit">V</span>`;
+                DOM.supercapVoltageValue.innerHTML = `${parseFloat(latest.field2) || '--'}<span class="metric-unit">V</span>`;
+                DOM.batteryCurrentValue.innerHTML = `${parseFloat(latest.field3) || '--'}<span class="metric-unit">A</span>`;
+                DOM.supercapCurrentValue.innerHTML = `${parseFloat(latest.field4) || '--'}<span class="metric-unit">A</span>`;
+                DOM.batteryTempValue.innerHTML = `${parseFloat(latest.field5) || '--'}<span class="metric-unit">°C</span>`;
+                DOM.converterTempValue.innerHTML = `${parseFloat(latest.field6) || '--'}<span class="metric-unit">°C</span>`;
+                DOM.thermalResistanceValue.innerHTML = `${parseFloat(latest.field7) || '--'}<span class="metric-unit">°C/W</span>`;
+                DOM.resistanceValue.innerHTML = `${parseFloat(latest.field8) || '--'}<span class="metric-unit">mΩ</span>`;
+                const soc = calculateSOC(batteryVoltage);
+                if (soc !== null) {
+                    DOM.socValue.innerHTML = `${soc}<span class="metric-unit">%</span>`;
+                    DOM.socProgressBar.style.width = `${soc}%`;
+                    DOM.socProgressText.textContent = `${soc}%`;
+                } else {
+                    DOM.socValue.innerHTML = `--<span class="metric-unit">%</span>`;
+                    DOM.socProgressBar.style.width = `0%`;
+                    DOM.socProgressText.textContent = `0%`;
+                }
+            }
+        }
+
+        // Update charts for ThingSpeak
+        function updateChartsTS() {
+            // Update AC chart
+            if (state.data.ac.feeds) {
+                const labels = state.data.ac.feeds.map(feed => new Date(feed.created_at).toLocaleTimeString(state.language === 'en' ? 'en-US' : 'zh-TW', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                }));
+                acChart.data.labels = labels;
+                acChart.data.datasets[0].data = state.data.ac.feeds.map(feed => parseFloat(feed.field3) || null);
+                acChart.data.datasets[1].data = state.data.ac.feeds.map(feed => parseFloat(feed.field4) || null);
+                acChart.data.datasets[2].data = state.data.ac.feeds.map(feed => parseFloat(feed.field5) || null);
+                acChart.update();
+            }
+
+            // Update battery charts
+            if (state.data.battery.feeds) {
+                const labels = state.data.battery.feeds.map(feed => new Date(feed.created_at).toLocaleTimeString(state.language === 'en' ? 'en-US' : 'zh-TW', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                }));
+                // Voltage chart
+                voltageChart.data.labels = labels;
+                voltageChart.data.datasets[0].data = state.data.battery.feeds.map(feed => parseFloat(feed.field1) || null);
+                voltageChart.data.datasets[1].data = state.data.battery.feeds.map(feed => parseFloat(feed.field2) || null);
+                voltageChart.update();
+
+                // Current chart
+                currentChart.data.labels = labels;
+                currentChart.data.datasets[0].data = state.data.battery.feeds.map(feed => parseFloat(feed.field3) || null);
+                currentChart.data.datasets[1].data = state.data.battery.feeds.map(feed => parseFloat(feed.field4) || null);
+                currentChart.update();
+
+                // Temperature chart
+                temperatureChart.data.labels = labels;
+                temperatureChart.data.datasets[0].data = state.data.battery.feeds.map(feed => parseFloat(feed.field5) || null);
+                temperatureChart.data.datasets[1].data = state.data.battery.feeds.map(feed => parseFloat(feed.field6) || null);
+                temperatureChart.update();
+
+                // Resistance chart
+                resistanceChart.data.labels = labels;
+                resistanceChart.data.datasets[0].data = state.data.battery.feeds.map(feed => parseFloat(feed.field7) || null);
+                resistanceChart.data.datasets[1].data = state.data.battery.feeds.map(feed => parseFloat(feed.field8) || null);
+                resistanceChart.update();
+            }
+        }
+
+        // Fetch all data for ThingSpeak mode
+        async function fetchAllData() {
+            addAlert('alert_fetching', 'info');
+
+            try {
+                const [acFeeds, batteryFeeds] = await Promise.all([
+                    fetchDataFromThingSpeak(CONFIG.THINGSPEAK_CHANNEL_IDS.ac, CONFIG.THINGSPEAK_API_KEYS.ac),
+                    fetchDataFromThingSpeak(CONFIG.THINGSPEAK_CHANNEL_IDS.battery, CONFIG.THINGSPEAK_API_KEYS.battery)
+                ]);
+
+                state.data.ac.feeds = acFeeds;
+                state.data.battery.feeds = batteryFeeds;
+
+                state.lastUpdate = new Date();
+                updateUIDataTS();
+                updateChartsTS();
+                addAlert('alert_success', 'success');
+
+                // Check alerts
+                checkAlertsTS();
+            } catch (error) {
+                addAlert('alert_ts_error', 'danger', error.message);
+            }
+        }
+
+        // Check alerts for ThingSpeak
+        function checkAlertsTS() {
+            if (state.data.battery.feeds.length > 0) {
+                const latest = state.data.battery.feeds[state.data.battery.feeds.length - 1];
+                const batteryVoltage = parseFloat(latest.field1);
+                const batteryTemp = parseFloat(latest.field5);
+                const converterTemp = parseFloat(latest.field6);
+                const soc = calculateSOC(batteryVoltage);
+                if (batteryVoltage && batteryVoltage < 25.6) {
+                    addAlert('alert_low_battery_voltage', 'warning', `${batteryVoltage}V`);
+                } else if (batteryVoltage && batteryVoltage > 28.5) {
+                    addAlert('alert_high_battery_voltage', 'warning', `${batteryVoltage}V`);
+                }
+                if (batteryTemp && batteryTemp > 40) {
+                    addAlert('alert_high_battery_temp', 'warning', `${batteryTemp}°C`);
+                }
+                if (converterTemp && converterTemp > 40) {
+                    addAlert('alert_high_converter_temp', 'warning', `${converterTemp}°C`);
+                }
+                if (soc !== null && soc < 35) {
+                    addAlert('alert_low_soc', 'warning', `${soc}%`);
+                }
+            }
+        }
+
+        // Demo simulator
+        const sim = {
+            acMode: '220',
+            soc: 65,
+            vBatt: 26.4,
+            vSc: 26.0,
+            iBatt: 0,
+            iSc: 0,
+            tBatt: 30,
+            tConv: 28,
+            ir: 2,
+            rth: 3
+        };
+
+        function randStep(x, step) { return x + (Math.random() * 2 - 1) * step; }
+        function between(x, lo, hi) { return Math.min(hi, Math.max(lo, x)); }
+        function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+        function fmt(n, d = 2) { return Number(n).toFixed(d); }
+
+        function nextSample() {
+            let acVbase = sim.acMode === '110' ? 110 : sim.acMode === '220' ? 220 : (Math.random() < 0.5 ? 110 : 220);
+            const acv = between(randStep(acVbase, 3), acVbase - 10, acVbase + 10);
+            const aci = between(Math.abs(randStep(6, 2)), 0.1, 12);
+            const pf = between(randStep(0.9, 0.1), 0.6, 1.0);
+            const acp = acv * aci * pf;
+
+            sim.vBatt = between(randStep(sim.vBatt, 0.25), 22.0, 29.2);
+            sim.vSc = between(randStep(sim.vSc, 0.35), 0.0, 29.0);
+
+            sim.iBatt = between(randStep(sim.iBatt, 5.0), -50, 50);
+            sim.iSc = between(randStep(sim.iSc, 4.0), -25, 25);
+
+            sim.tConv = between(randStep(sim.tConv, 0.3), 15, 38);
+            sim.tBatt = between(randStep(sim.tBatt + sim.iBatt * 0.02, 0.5), 20, 55);
+
+            sim.ir = between(randStep(sim.ir, 0.5), 0, 4);
+            sim.rth = between(randStep(sim.rth, 0.02), 2, 5);
+
+            const socDelta = clamp(sim.iBatt * 0.02 - (sim.tBatt - 30) * 0.005, -1.2, 1.2);
+            sim.soc = clamp(sim.soc + socDelta, 0, 100);
+
+            return {
+                created_at: new Date().toISOString(),
+                field3: acv,
+                field4: aci,
+                field5: acp,
+                field1: sim.vBatt,
+                field2: sim.vSc,
+                field3_battery: sim.iBatt,
+                field4_battery: sim.iSc,
+                field5_battery: sim.tBatt,
+                field6: sim.tConv,
+                field7: sim.rth,
+                field8: sim.ir,
+                soc: sim.soc
+            };
+        }
+
+        // Update for demo mode
+        function updateDemo() {
+            const sample = nextSample();
+
+            // Simulate feeds by adding to array
+            state.data.ac.feeds.push({ created_at: sample.created_at, field3: sample.field3, field4: sample.field4, field5: sample.field5 });
+            state.data.battery.feeds.push({ created_at: sample.created_at, field1: sample.field1, field2: sample.field2, field3: sample.field3_battery, field4: sample.field4_battery, field5: sample.field5_battery, field6: sample.field6, field7: sample.field7, field8: sample.field8 });
+
+            if (state.data.ac.feeds.length > 60) {
+                state.data.ac.feeds.shift();
+                state.data.battery.feeds.shift();
+            }
+
+            state.lastUpdate = new Date();
+            updateUIDataDemo(sample);
+            updateChartsTS();  // Reuse TS chart update since format is same
+            checkAlertsDemo(sample);
+        }
+
+        // Update UI data for demo
+        function updateUIDataDemo(d) {
+            DOM.acvValue.innerHTML = `${fmt(d.field3,1)}<span class="metric-unit">V</span>`;
+            DOM.aciValue.innerHTML = `${fmt(d.field4,2)}<span class="metric-unit">A</span>`;
+            DOM.acpowerValue.innerHTML = `${fmt(d.field5,0)}<span class="metric-unit">W</span>`;
+
+            DOM.batteryVoltageValue.innerHTML = `${fmt(d.field1,2)}<span class="metric-unit">V</span>`;
+            DOM.supercapVoltageValue.innerHTML = `${fmt(d.field2,2)}<span class="metric-unit">V</span>`;
+            DOM.batteryCurrentValue.innerHTML = `${fmt(d.field3_battery,2)}<span class="metric-unit">A</span>`;
+            DOM.supercapCurrentValue.innerHTML = `${fmt(d.field4_battery,2)}<span class="metric-unit">A</span>`;
+
+            DOM.batteryTempValue.innerHTML = `${fmt(d.field5_battery,1)}<span class="metric-unit">°C</span>`;
+            DOM.converterTempValue.innerHTML = `${fmt(d.field6,1)}<span class="metric-unit">°C</span>`;
+
+            DOM.thermalResistanceValue.innerHTML = `${fmt(d.field7,2)}<span class="metric-unit">°C/W</span>`;
+            DOM.resistanceValue.innerHTML = `${fmt(d.field8,1)}<span class="metric-unit">mΩ</span>`;
+
+            const socPct = fmt(d.soc,0);
+            DOM.socValue.innerHTML = `${socPct}<span class="metric-unit">%</span>`;
+            DOM.socProgressBar.style.width = socPct + '%';
+            DOM.socProgressText.textContent = socPct + '%';
+        }
+
+        // Check alerts for demo
+        function checkAlertsDemo(d) {
+            if (d.field1 < 23.0) {
+                addAlert('alert_low_battery_voltage', 'warning', `${fmt(d.field1,2)} V`);
+            }
+            if (d.field1 > 29.0) {
+                addAlert('alert_high_battery_voltage', 'danger', `${fmt(d.field1,2)} V`);
+            }
+            if (Math.abs(d.field3_battery) > 40) {
+                addAlert('alert_high_battery_current', 'warning', `${fmt(d.field3_battery,1)} A`);
+            }
+            if (d.field5_battery > 50) {
+                addAlert('alert_high_battery_temp', 'danger', `${fmt(d.field5_battery,1)} °C`);
+            }
+            if (d.soc < 15) {
+                addAlert('alert_low_soc', 'warning', `${fmt(d.soc,0)}%`);
+            }
+            if (d.field6 > 40) {
+                addAlert('alert_high_converter_temp', 'warning', `${fmt(d.field6,1)} °C`);
+            }
+        }
+
+        // Start timer
+        let timer;
+        function startTimer() {
+            if (timer) clearInterval(timer);
+            timer = setInterval(state.mode === 'demo' ? updateDemo : fetchAllData, CONFIG.refreshInterval);
+        }
+
+        // Initialize
+        async function init() {
+            // Set initial mode UI
+            updateModeUI();
+
+            // Set refresh rate
+            DOM.refreshRate.value = CONFIG.refreshInterval;
+            DOM.refreshValue.innerHTML = `
+                <span class="lang-zh">${CONFIG.refreshInterval / 1000}秒</span>
+                <span class="lang-en">${CONFIG.refreshInterval / 1000}s</span>
+            `;
+
+            // Event listeners
+            DOM.refreshRate.addEventListener('change', function() {
+                CONFIG.refreshInterval = parseInt(this.value);
+                DOM.refreshValue.innerHTML = `
+                    <span class="lang-zh">${CONFIG.refreshInterval / 1000}秒</span>
+                    <span class="lang-en">${CONFIG.refreshInterval / 1000}s</span>
+                `;
+                startTimer();
+                addAlert('refresh_rate_label', 'info', `${CONFIG.refreshInterval / 1000}秒 | ${CONFIG.refreshInterval / 1000}s`);
+            });
+
+            DOM.refreshBtn.addEventListener('click', () => {
+                if (state.mode === 'demo') {
+                    updateDemo();
+                } else {
+                    fetchAllData();
+                }
+            });
+
+            DOM.exportBtn.addEventListener('click', function() {
+                addAlert('export_button', 'info');
+            });
+
+            // Initial data
+            clearData();
+            updateDemo();
+
+            // Start timer
+            startTimer();
+
+            // Update time
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+        }
+
+        // Start application
+        init();
+    </script>
+</body>
+</html>
+```
